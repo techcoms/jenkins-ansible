@@ -4,7 +4,7 @@ pipeline {
     environment {
         APP_NAME   = "myapp"
         DOCKER_USER = credentials('dockerhub-creds')  // if using token-style creds
-        IMAGE_NAME = "yourdockerhubusername/myapp"
+        IMAGE_NAME = "techcoms/myapp"
         TAG        = "latest"
     }
 
@@ -12,7 +12,7 @@ pipeline {
 
         stage('Clone repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/your-repo/your-project.git'
+                git branch: 'main', url: 'https://github.com/techcoms/jenkins-ansible.git'
             }
         }
 
