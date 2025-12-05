@@ -3,55 +3,57 @@ pipeline {
 
     environment {
         APP_NAME   = "myapp"
+        DOCKER_USER = credentials('dockerhub-creds')  // if using token-style creds
         IMAGE_NAME = "yourdockerhubusername/myapp"
         TAG        = "latest"
     }
 
     stages {
 
-        stage('Git Clone') {
+        stage('Clone repository') {
             steps {
-                git 'https://github.com/your-repo/your-project.git'
+                git branch: 'main', url: 'https://github.com/your-repo/your-project.git'
             }
         }
 
-        stage('Maven Build') {
+        stage('Build Maven Project') {
             steps {
                 sh 'mvn clean package -DskipTests'
             }
         }
 
-        stage('Docker Build') {
+        stage('Build Docker Image') {
             steps {
                 sh 'docker build -t ${IMAGE_NAME}:${TAG} .'
             }
         }
 
-        stage('Docker Push to DockerHub') {
+        stage('Push Docker Image') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
-                                                  usernameVariable: 'DOCKER_USER',
-                                                  passwordVariable: 'DOCKER_PASS')]) {
+                                                 usernameVariable: 'DOCKER_USER',
+                                                 passwordVariable: 'DOCKER_PASS')]) {
 
-                    sh '''
-                       echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                       docker push ${IMAGE_NAME}:${TAG}
-                       docker logout
-                    '''
+                    sh """
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push ${IMAGE_NAME}:${TAG}
+                        docker logout
+                    """
                 }
             }
         }
 
         stage('Deploy with Ansible') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'deploy-ssh-key',
-                                                  keyFileVariable: 'SSH_KEY')]) {
-
-                    sh '''
+                withCredentials([
+                    sshUserPrivateKey(credentialsId: 'deploy-ssh-key',
+                                    keyFileVariable: 'SSH_KEY')
+                ]) {
+                    sh """
                         ansible-playbook -i ansible/inventory ansible/deploy.yml \
                         --extra-vars "image=${IMAGE_NAME}:${TAG} app_name=${APP_NAME}" \
                         --private-key $SSH_KEY
-                    '''
+                    """
                 }
             }
         }
