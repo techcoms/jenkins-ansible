@@ -1,31 +1,32 @@
-- name: Deploy dockerized app
+- name: Deploy Dockerized App
   hosts: app_servers
   become: true
 
   vars:
     image: ""
-    app_name: myapp
+    app_name: "myapp"
     container_port: 8080
     host_port: 8080
 
   tasks:
-    - name: Pull image
+
+    - name: Pull Image from Registry
       community.docker.docker_image:
         name: "{{ image }}"
         source: pull
 
-    - name: Stop & remove existing container
+    - name: Stop Existing Container (if exists)
       community.docker.docker_container:
         name: "{{ app_name }}"
         state: absent
         force_kill: yes
       ignore_errors: yes
 
-    - name: Run container
+    - name: Start New Container
       community.docker.docker_container:
         name: "{{ app_name }}"
         image: "{{ image }}"
-        state: started
         restart_policy: always
+        state: started
         ports:
           - "{{ host_port }}:{{ container_port }}"
