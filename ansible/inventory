@@ -1,2 +1,4 @@
-[app_servers]
-app1.example.com ansible_user=ec2-user
+[servers]
+3.93.185.43 ansible_user=ec2-user ansible_ssh_private_key_file=/home/ec2-user/.ssh/id_rsa_ansible
+[nodes]
+54.144.75.82 ansible_user=ansible ansible_ssh_private_key_file=/home/ec2-user/.ssh/id_rsa_ansible
